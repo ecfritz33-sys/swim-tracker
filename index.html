@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0B3B5C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Swim">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>Swim Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cond:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  --deep:#0B3B5C; --deep2:#0F4C75; --sea:#1B7FB8; --aqua:#2EC4D6; --foam:#E8F6FA;
+  --bg:#F3F8FB; --card:#FFFFFF; --ink:#0E2233; --muted:#5B7083; --line:#DCE7EE;
+  --good:#12915A; --goodbg:#E3F5EC; --warn:#C26A0A; --warnbg:#FCF0E0; --bad:#C2372B;
+  --silver:#7A8A99; --bronze:#B06A2E; --ag:#7B4FD6; --gold:#D9A400;
+  --r:18px; --shadow:0 1px 0 rgba(14,34,51,.04),0 6px 20px rgba(14,34,51,.07);
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Barlow,system-ui,sans-serif;font-size:16px;line-height:1.4}
+body{min-height:100vh}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+input,select{font:inherit;color:inherit}
+.num,.big,h1,h2,h3{font-family:var(--cond);letter-spacing:.2px}
+.tab-num{font-variant-numeric:tabular-nums}
+
+/* header */
+.hero{background:linear-gradient(160deg,var(--deep) 0%,var(--deep2) 55%,var(--sea) 100%);color:#fff;padding:calc(14px + var(--safe-t)) 16px 54px;position:relative;overflow:hidden}
+.hero svg.waves{position:absolute;left:0;right:0;bottom:-1px;width:100%;height:60px}
+.hero .row{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:760px;margin:0 auto;position:relative}
+.hero h1{margin:0;font-size:30px;font-weight:700;line-height:1}
+.hero .sub{opacity:.82;font-size:14px;margin-top:4px}
+.hero .meta{max-width:760px;margin:10px auto 0;font-size:13px;opacity:.85;position:relative;display:flex;gap:6px 14px;flex-wrap:wrap}
+.hero .meta b{font-weight:600;opacity:1}
+.iconbtn{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:18px}
+.iconbtn:active{transform:scale(.95)}
+.spin{animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+
+.wrap{max-width:760px;margin:-38px auto 0;padding:0 14px calc(96px + var(--safe-b));position:relative}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+.card h2{margin:0 0 2px;font-size:22px;font-weight:600}
+.card .note{color:var(--muted);font-size:13px;margin:0 0 12px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+
+/* tiles */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+@media(min-width:640px){.tiles{grid-template-columns:repeat(4,1fr)}}
+.tile{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 14px 12px;text-align:left;position:relative;overflow:hidden;border:2px solid transparent;transition:transform .15s,border-color .15s}
+.tile:active{transform:scale(.98)}
+.tile[aria-expanded=true]{border-color:var(--c)}
+.tile::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--c)}
+.tile .lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:flex;justify-content:space-between}
+.tile .big{font-size:40px;font-weight:700;line-height:1;margin:6px 0 4px;color:var(--ink)}
+.tile .big small{font-size:18px;color:var(--muted);font-weight:600}
+.tile .s{font-size:12.5px;color:var(--muted);line-height:1.3}
+.meter{height:6px;border-radius:3px;background:var(--line);margin-top:8px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--c);border-radius:3px;transition:width .6s}
+.chev{transition:transform .2s;display:inline-block}
+.tile[aria-expanded=true] .chev{transform:rotate(180deg)}
+.detail{border-left:4px solid var(--c)}
+.detail-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+
+/* lists */
+.list{display:flex;flex-direction:column}
+.li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.li:last-child{border-bottom:0}
+.li .main{flex:1;min-width:0}
+.li .ev{font-weight:600}
+.li .sm{font-size:12.5px;color:var(--muted)}
+.li .t{font-family:var(--cond);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.li .d{font-size:12.5px;text-align:right;white-space:nowrap}
+button.li{width:100%;text-align:left}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;background:var(--foam);color:var(--deep2)}
+.pill.pb{background:var(--gold);color:#3a2c00}
+.pill.ok{background:var(--goodbg);color:var(--good)}
+.pill.lv-B{background:#EEF2F5;color:#4C5E6E}
+.pill.lv-BB{background:#E2F0FA;color:#1B6FA3}
+.pill.lv-A{background:#E1F5F0;color:#0D7F68}
+.pill.lv-AA{background:#ECE5FB;color:#6A3FC8}
+.pill.lv-AAA,.pill.lv-AAAA{background:#FBEFD2;color:#8A6100}
+.up{color:var(--good);font-weight:600}
+.down{color:var(--muted)}
+.cuts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.cut{font-size:12px;border-radius:8px;padding:2px 7px;background:#F1F5F8;color:var(--muted);white-space:nowrap}
+.cut.made{background:var(--goodbg);color:var(--good);font-weight:600}
+.cut b{font-weight:700}
+
+/* chips & filters */
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;margin-bottom:8px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;padding:6px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:14px;font-weight:600;color:var(--muted)}
+.chip[aria-pressed=true]{background:var(--deep2);border-color:var(--deep2);color:#fff}
+.seg{display:inline-flex;background:#E7EFF4;border-radius:12px;padding:3px;gap:2px}
+.seg button{padding:6px 14px;border-radius:9px;font-weight:600;font-size:14px;color:var(--muted)}
+.seg button[aria-pressed=true]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+/* times cards */
+.ecard{display:block;width:100%;text-align:left;background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:12px 14px;margin-bottom:10px}
+.ecard .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ecard .name{font-weight:700;font-size:17px}
+.ecard .best{font-family:var(--cond);font-size:28px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.ecard .when{font-size:12px;color:var(--muted);text-align:right}
+.ecard .lvrow{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.old{font-size:11px;font-weight:700;color:var(--warn);background:var(--warnbg);border-radius:6px;padding:1px 6px}
+
+/* charts */
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;border-radius:10px;padding:6px 9px;font-size:12.5px;line-height:1.35;white-space:nowrap;display:none;z-index:5;box-shadow:0 6px 20px rgba(0,0,0,.2)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--muted);margin:4px 0 8px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px}
+.legend i.dot{width:10px;height:10px;border-radius:50%}
+.pace{font-size:15px;margin:10px 0 0;line-height:1.5}
+.pace b{font-weight:700}
+
+/* table */
+.tbl{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.tbl th{text-align:left;font-weight:600;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding:6px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:9px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl tr:last-child td{border-bottom:0}
+.scroll{overflow-x:auto;margin:0 -16px;padding:0 16px}
+.bt td,.bt th{padding-left:10px;padding-right:10px}
+.bt td:first-child,.bt th:first-child{position:sticky;left:0;background:#fff;z-index:1;padding-left:16px;box-shadow:1px 0 0 var(--line)}
+.bt tbody tr,.tbl tr[data-event]{cursor:pointer}
+.bt .cut{margin:0}
+.lad-row{cursor:pointer}
+
+/* form */
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:13px;font-weight:600;color:var(--muted)}
+.inp{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;background:#fff;font-size:16px}
+.inp:focus{outline:none;border-color:var(--sea)}
+.inp.timein{font-family:var(--cond);font-size:30px;font-weight:600;letter-spacing:.5px;text-align:center;padding:8px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{display:block;width:100%;background:var(--sea);color:#fff;font-weight:700;font-size:17px;border-radius:14px;padding:14px;text-align:center}
+.btn:disabled{opacity:.45}
+.btn.ghost{background:#E7EFF4;color:var(--deep2)}
+.preview{border-radius:14px;padding:12px;margin-bottom:12px;background:var(--foam);font-size:14.5px}
+.preview.pb{background:linear-gradient(135deg,#FFF6D6,#FFE9A8)}
+.preview .h{font-weight:700;font-size:16px}
+.del{font-size:13px;color:var(--bad);font-weight:600;padding:6px 4px}
+
+/* nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:var(--safe-b);z-index:20}
+nav.tabs .in{display:flex;max-width:520px;width:100%}
+nav.tabs button{flex:1;padding:8px 0 9px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;font-weight:600;color:var(--muted)}
+nav.tabs button .ic{font-size:21px;line-height:1.1}
+nav.tabs button[aria-current=page]{color:var(--sea)}
+nav.tabs button.addbtn .ic{width:42px;height:42px;border-radius:14px;background:var(--sea);color:#fff;display:grid;place-items:center;margin-top:-16px;box-shadow:0 6px 16px rgba(27,127,184,.4);font-size:26px}
+
+/* modal & toast */
+#modal{position:fixed;inset:0;z-index:40;display:none}
+#modal.on{display:block}
+#modal .bg{position:absolute;inset:0;background:rgba(8,25,38,.45)}
+#modal .sheet{position:absolute;left:0;right:0;bottom:0;max-height:88vh;overflow:auto;background:var(--bg);border-radius:22px 22px 0 0;padding:8px 14px calc(20px + var(--safe-b));max-width:760px;margin:0 auto;animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(30px);opacity:.6}to{transform:none;opacity:1}}
+#modal .grab{width:40px;height:5px;border-radius:3px;background:#C5D3DC;margin:6px auto 10px}
+#modal .mh{display:flex;justify-content:space-between;align-items:center;margin:0 2px 10px}
+#modal .mh h2{margin:0;font-size:26px}
+#toast{position:fixed;left:50%;bottom:calc(84px + var(--safe-b));transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;opacity:0;transition:.25s;z-index:50;pointer-events:none;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.banner{background:var(--warnbg);color:#6b3b04;border-radius:14px;padding:10px 12px;font-size:14px;margin-bottom:12px}
+.empty{color:var(--muted);text-align:center;padding:24px 8px}
+.skel{height:120px;border-radius:var(--r);background:linear-gradient(90deg,#e9f0f5,#f6fafc,#e9f0f5);background-size:200% 100%;animation:sk 1.2s infinite;margin-bottom:14px}
+@keyframes sk{to{background-position:-200% 0}}
+.pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:300px;margin:10px auto}
+.pinpad button{height:58px;border-radius:16px;background:#fff;box-shadow:var(--shadow);font-family:var(--cond);font-size:28px;font-weight:600}
+.dots{display:flex;gap:12px;justify-content:center;margin:8px 0 4px}
+.dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--sea)}
+.dots i.on{background:var(--sea)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="row">
+    <div><h1 id="hName">Swim Tracker</h1><div class="sub" id="hSub">&nbsp;</div></div>
+    <div style="display:flex;gap:8px"><button class="iconbtn" id="lockBtn" aria-label="Family PIN">🔒</button><button class="iconbtn" id="refreshBtn" aria-label="Refresh">⟳</button></div>
+  </div>
+  <div class="meta" id="hMeta"></div>
+  <svg class="waves" viewBox="0 0 1200 60" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 30 C 150 5, 300 55, 450 30 S 750 5, 900 30 S 1100 55, 1200 30 L1200 60 L0 60Z" fill="#F3F8FB" opacity=".45"/>
+    <path d="M0 42 C 200 20, 350 62, 600 40 S 1000 22, 1200 42 L1200 60 L0 60Z" fill="#F3F8FB"/>
+  </svg>
+</header>
+<main class="wrap" id="app"><div class="skel"></div><div class="skel"></div></main>
+<nav class="tabs"><div class="in">
+  <button data-tab="home"><span class="ic">🏠</span>Home</button>
+  <button data-tab="times"><span class="ic">⏱️</span>Times</button>
+  <button data-tab="add" class="addbtn"><span class="ic">＋</span>Add</button>
+  <button data-tab="progress"><span class="ic">📈</span>Progress</button>
+  <button data-tab="meets"><span class="ic">🏊</span>Meets</button>
+</div></nav>
+<div id="modal"><div class="bg"></div><div class="sheet"></div></div>
+<div id="toast"></div>
+<script>
+// ▼▼▼ Paste your Apps Script Web app URL (ends in /exec) between the quotes ▼▼▼
+const API_URL='https://script.google.com/macros/s/AKfycbxlTg7esz2zntt-m08WmkWHBXvNPZyaPSy41sasq81u_EKDiP-qaTtfK_DRXD-Qi0FZ/exec';
+// ▲▲▲
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}};
+const pad=n=>String(n).padStart(2,'0');
+const todayKey=()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
+const dnum=k=>{const [y,m,d]=k.split('-').map(Number);return Date.UTC(y,m-1,d)/864e5};
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fdate=(k,yr=true)=>{const [y,m,d]=k.split('-').map(Number);return MONTHS[m-1]+' '+d+(yr?', '+y:'')};
+const ft=x=>{if(x==null||isNaN(x))return '—';const m=Math.floor(x/60),s=x-m*60;return m?m+':'+(s<10?'0':'')+s.toFixed(2):s.toFixed(2)};
+const fgap=x=>x<60?x.toFixed(2):ft(x);
+const r2=x=>Math.round(x*100)/100;
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),2600)}
+const errMsg=e=>String(e&&e.message||e||'Something went wrong').replace(/^Error:\s*/,'');
+
+// Accepts 1:02.68, 1.02.68, 102.68 (=1:02.68), 62.68, 28.9
+function parseTime(str){
+  const s=String(str||'').trim().replace(/,/g,'.');
+  if(!s)return null;
+  let m=s.match(/^(\d{1,2})[:.](\d{1,2})[.:](\d{1,2})$/);
+  if(m){const sec=+m[2];if(sec>=60)return null;return r2(+m[1]*60+sec+(+m[3].padEnd(2,'0'))/100)}
+  m=s.match(/^(\d{1,2}):(\d{1,2}(?:\.\d{1,2})?)$/);
+  if(m){const sec=+m[2];if(sec>=60)return null;return r2(+m[1]*60+sec)}
+  m=s.match(/^(\d+)(?:\.(\d{1,2}))?$/);
+  if(m){const whole=m[1],h=m[2]?(+m[2].padEnd(2,'0'))/100:0;
+    if(whole.length>=3){const sec=+whole.slice(-2),min=+whole.slice(0,-2);if(sec>=60)return null;return r2(min*60+sec+h)}
+    return r2(+whole+h)}
+  return null;
+}
+
+/* ---------- constants ---------- */
+const EVENTS={SCY:['50 Free','100 Free','200 Free','500 Free','1000 Free','1650 Free','50 Back','100 Back','200 Back','50 Breast','100 Breast','200 Breast','50 Fly','100 Fly','200 Fly','100 IM','200 IM','400 IM'],
+  LCM:['50 Free','100 Free','200 Free','400 Free','800 Free','1500 Free','50 Back','100 Back','200 Back','50 Breast','100 Breast','200 Breast','50 Fly','100 Fly','200 Fly','200 IM','400 IM']};
+const ORDER=['50 Free','100 Free','200 Free','400 Free','500 Free','800 Free','1000 Free','1500 Free','1650 Free','50 Back','100 Back','200 Back','50 Breast','100 Breast','200 Breast','50 Fly','100 Fly','200 Fly','100 IM','200 IM','400 IM'];
+const LV=['B','BB','A','AA','AAA','AAAA'];
+const STROKES=['Free','Back','Breast','Fly','IM'];
+const COL={her:'#1B7FB8',bronze:'#B06A2E',silver:'#7A8A99',bonus:'#2EC4D6',ag:'#7B4FD6',grid:'#E3ECF2'};
+
+/* ---------- API ---------- */
+async function call(fn,...args){
+  if(!/^https:\/\/script\.google\.com\//.test(API_URL))throw new Error('App not connected yet: the API_URL line in index.html needs your /exec link');
+  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),25000);
+  try{
+    const r=await fetch(API_URL,{method:'POST',body:JSON.stringify({fn,args}),headers:{'Content-Type':'text/plain;charset=utf-8'},redirect:'follow',credentials:'omit',signal:ctl.signal});
+    const j=await r.json();if(!j.ok)throw new Error(j.error||'Request failed');return j.result;
+  }catch(e){if(e.name==='AbortError')throw new Error('Timed out. Check your connection.');throw e}
+  finally{clearTimeout(t)}
+}
+
+/* ---------- state ---------- */
+const S={data:null,view:ls.get('swim-view')||'cards',tab:ls.get('swim-tab')||'home',tile:null,course:'SCY',stroke:'all',show:'all',pevent:ls.get('swim-pevent')||'50 Fly',pcourse:'SCY',
+  meetSel:null,loading:false,offline:false,pin:ls.get('swim-pin')||'',
+  form:{meet:ls.get('swim-lastmeet')||'',date:todayKey(),course:'SCY',event:'50 Free',time:''}};
+
+/* ---------- model ---------- */
+let M=null;
+function build(data){
+  const std={};(data.standards||[]).forEach(s=>{std[s.course+'|'+s.event]=s});
+  const swims=(data.swims||[]).map(s=>({...s,seconds:Number(s.seconds)})).filter(s=>s.event&&s.seconds>0)
+    .sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:String(a.id)<String(b.id)?-1:1);
+  const run={};const best={};
+  swims.forEach(s=>{const k=s.course+'|'+s.event;const prev=run[k];s.prevBest=prev??null;s.pb=prev==null||s.seconds<prev;s.first=prev==null;
+    if(prev==null||s.seconds<prev){run[k]=s.seconds;best[k]=s}});
+  const lastDate=swims.length?swims[swims.length-1].date:null;
+  const rows=Object.keys(best).map(k=>evalBest(best[k],std[k],swims)).sort((a,b)=>ORDER.indexOf(a.event)-ORDER.indexOf(b.event));
+  // meets: group consecutive swims with same meet name within 4 days
+  const meets=[];
+  swims.forEach(s=>{let m=meets.find(x=>x.name===s.meet&&Math.abs(dnum(s.date)-dnum(x.end))<=4);
+    if(!m){m={name:s.meet||'Meet',start:s.date,end:s.date,swims:[],course:s.course};meets.push(m)}
+    m.swims.push(s);if(s.date<m.start)m.start=s.date;if(s.date>m.end)m.end=s.date});
+  meets.forEach(m=>{m.key=m.name+'|'+m.start;m.pbs=m.swims.filter(s=>s.pb&&!s.first).length});
+  meets.sort((a,b)=>a.end<b.end?1:-1);
+  return {std,swims,best,rows,meets,lastDate,settings:data.settings||{},at:data.at};
+}
+function evalBest(b,s,swims){
+  const sec=b.seconds;const r={event:b.event,course:b.course,sec,time:ft(sec),date:b.date,meet:b.meet,stroke:b.event.split(' ')[1],dist:+b.event.split(' ')[0],std:s,old:dnum(todayKey())-dnum(b.date)>365};
+  r.level=null;r.next=null;
+  if(s&&s.B!=null){let i=-1;LV.forEach((l,j)=>{if(s[l]!=null&&sec<=s[l])i=j});r.level=i>=0?LV[i]:'Below B';
+    if(i<5&&s[LV[i+1]]!=null)r.next={name:LV[i+1],cut:s[LV[i+1]],gap:r2(sec-s[LV[i+1]])}}
+  r.ne=null;
+  if(s&&b.course==='SCY'&&s.ag!=null){const t=sec<=s.ag?'Age Group':sec<=s.silver?'Silver':sec<=s.bronze?'Bronze':'None';
+    const nx=t==='None'?['Bronze',s.bronze]:t==='Bronze'?['Silver',s.silver]:t==='Silver'?['Age Group',s.ag]:null;
+    r.ne={tier:t,bonus:s.ag_bonus!=null&&sec<=s.ag_bonus,next:nx?{name:nx[0],cut:nx[1],gap:r2(sec-nx[1])}:null,
+      gaps:{bronze:r2(sec-s.bronze),silver:r2(sec-s.silver),ag_bonus:s.ag_bonus!=null?r2(sec-s.ag_bonus):null,ag:r2(sec-s.ag)}}}
+  // pace over last 12 months
+  const list=swims.filter(x=>x.event===b.event&&x.course===b.course);
+  const end=dnum(M0end(swims)),start=end-365;
+  const before=list.filter(x=>dnum(x.date)<=start);let p0,span;
+  if(before.length){p0=Math.min(...before.map(x=>x.seconds));span=365}else{const d0=Math.min(...list.map(x=>dnum(x.date)));p0=Math.min(...list.filter(x=>dnum(x.date)===d0).map(x=>x.seconds));span=end-d0}
+  r.drop=r2(p0-sec);r.rate=span>=120&&r.drop>0?r.drop/(span/30.44):null;r.swimCount=list.length;
+  return r;
+}
+const M0end=sw=>sw.length?sw[sw.length-1].date:todayKey();
+function eta(gap,rate){if(gap<=0)return 'Done';if(!(rate>0))return null;const mo=gap/rate;if(mo>36)return 'Over 3 years';const d=new Date(Date.UTC(...M.lastDate.split('-').map((v,i)=>i===1?v-1:+v))+mo*30.44*864e5);return MONTHS[d.getUTCMonth()]+' '+d.getUTCFullYear()}
+
+/* ---------- render ---------- */
+function render(){
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===S.tab?'page':'false'));
+  const app=$('#app');
+  if(!M){app.innerHTML=S.offline?`<div class="card empty">Couldn't load the swim data.<br><span class="small">${esc(S.err||'')}</span><br><br><button class="btn ghost" onclick="load()">Try again</button></div>`:'<div class="skel"></div><div class="skel"></div>';return}
+  const st=M.settings;
+  $('#hName').textContent=st.swimmer||'Swim Tracker';
+  $('#hSub').textContent=['Swim tracker',st.group,st.team].filter(Boolean).join(' · ');
+  const lm=M.meets[0];
+  $('#hMeta').innerHTML=lm?`<span>Latest: <b>${esc(lm.name)}</b> · ${fdate(lm.end)}</span><span>${M.swims.length} swims logged</span>`:'';
+  $('#lockBtn').textContent=S.pin?'🔓':'🔒';
+  let h=S.offline?`<div class="banner">Showing saved data. Couldn't reach the server just now.</div>`:'';
+  h+=({home:vHome,times:vTimes,add:vAdd,progress:vProgress,meets:vMeets}[S.tab]||vHome)();
+  app.innerHTML=h;
+  after();
+}
+function after(){
+  if(S.tab==='progress'){drawProgress($('#pchart'),S.pevent,S.pcourse,true);const c=document.querySelector('[data-pevent][aria-pressed=true]');if(c)c.scrollIntoView({block:'nearest',inline:'center'})}
+  if(S.tab==='add')updatePreview();
+  if(S.tab==='times')drawLadder($('#ladder'),M.rows.filter(keep));
+}
+
+/* Home */
+function vHome(){
+  const scy=M.rows.filter(r=>r.course==='SCY');
+  const ne=scy.filter(r=>r.ne);const sil=ne.filter(r=>r.ne.tier==='Silver'||r.ne.tier==='Age Group');
+  const bron=ne.filter(r=>r.ne.tier!=='None');const ag=ne.filter(r=>r.ne.tier==='Age Group');const bonus=ne.filter(r=>r.ne.bonus);
+  const usa=scy.filter(r=>r.level);const bb=usa.filter(r=>['BB','A','AA','AAA','AAAA'].includes(r.level));
+  const nextLv=M.rows.filter(r=>r.next).sort((a,b)=>a.next.gap-b.next.gap)[0];
+  const agClose=ne.filter(r=>r.ne.tier!=='Age Group').sort((a,b)=>a.ne.gaps.ag-b.ne.gaps.ag)[0];
+  const silClose=ne.filter(r=>r.ne.tier==='None'||r.ne.tier==='Bronze').sort((a,b)=>a.ne.gaps.silver-b.ne.gaps.silver)[0];
+  const T=[
+    {k:'silver',c:COL.silver,lbl:'Silvers cuts',big:`${sil.length}<small> / ${ne.length}</small>`,s:`Bronze or better in ${bron.length}`,m:ne.length?sil.length/ne.length:0},
+    {k:'bb',c:COL.her,lbl:'BB or better',big:`${bb.length}<small> / ${usa.length}</small>`,s:'USA Swimming levels, SCY',m:usa.length?bb.length/usa.length:0},
+    {k:'next',c:'#0D9488',lbl:'Closest new level',big:nextLv?fgap(nextLv.next.gap):'—',s:nextLv?`${nextLv.event} ${nextLv.course==='LCM'?'LCM ':''}to ${nextLv.next.name}`:''},
+    {k:'ag',c:COL.ag,lbl:'Age Group',big:`${ag.length}`,s:`Bonus times in ${bonus.length}`+(agClose?` · closest cut ${agClose.event}, ${fgap(agClose.ne.gaps.ag)} off`:'')}
+  ];
+  let h='<div class="tiles">'+T.map(t=>`<button class="tile" style="--c:${t.c}" data-tile="${t.k}" aria-expanded="${S.tile===t.k}"><div class="lbl"><span>${t.lbl}</span><span class="chev">▾</span></div><div class="big">${t.big}</div><div class="s">${esc(t.s)}</div>${t.m!=null?`<div class="meter"><i style="width:${Math.round(t.m*100)}%"></i></div>`:''}</button>`).join('')+'</div>';
+  if(S.tile)h+=tileDetail(S.tile,{sil,bb,ne,bonus});
+  // headline sentence
+  h+=`<div class="card"><h2>Where she stands</h2><p class="pace" style="margin-top:4px">Silvers cuts in <b>${sil.length}</b> short course events and BB or better in <b>${bb.length}</b>.`+
+    (silClose?` Closest Silvers cut still to get: <b>${esc(silClose.event)}</b>, ${fgap(silClose.ne.gaps.silver)} away.`:'')+
+    (agClose?` Closest Age Group cut: <b>${esc(agClose.event)}</b>, ${fgap(agClose.ne.gaps.ag)} away.`:'')+`</p></div>`;
+  if(M.meets[0])h+=meetCard(M.meets[0],true);
+  // targets
+  const targets=[];
+  M.rows.forEach(r=>{if(r.next)targets.push({ev:r.event,course:r.course,name:r.next.name+' (USA)',gap:r.next.gap,cut:r.next.cut,best:r.sec});
+    if(r.ne&&r.ne.next)targets.push({ev:r.event,course:r.course,name:r.ne.next.name+' cut',gap:r.ne.next.gap,cut:r.ne.next.cut,best:r.sec});
+    if(r.ne&&!r.ne.bonus&&r.ne.gaps.ag_bonus!=null&&r.ne.gaps.ag_bonus>0)targets.push({ev:r.event,course:r.course,name:'AG bonus',gap:r.ne.gaps.ag_bonus,cut:r.std.ag_bonus,best:r.sec})});
+  const seen=new Set();targets.sort((a,b)=>a.gap/a.best-b.gap/b.best);
+  const uniq=targets.filter(t=>{const k=t.ev+t.course+t.cut;if(seen.has(k))return false;seen.add(k);return true});
+  h+=`<div class="card"><h2>Next targets</h2><p class="note">The cuts she's closest to, as a share of her time.</p><div class="list">`+
+    uniq.slice(0,6).map(t=>`<button class="li" data-event="${esc(t.ev)}" data-course="${t.course}"><div class="main"><div class="ev">${esc(t.ev)}${t.course==='LCM'?' <span class="pill">LCM</span>':''}</div><div class="sm">${esc(t.name)} ${ft(t.cut)} · best ${ft(t.best)}</div></div><div class="t">${fgap(t.gap)}</div></button>`).join('')+`</div></div>`;
+  return h;
+}
+function tileDetail(k,{sil,bb,ne,bonus}){
+  const c={silver:COL.silver,bb:COL.her,next:'#0D9488',ag:COL.ag}[k];
+  let title,note,rows,line;
+  if(k==='silver'){title='Silvers cuts she has';note='Short course. Margin under the Silvers cut.';rows=sil;line=r=>`<div class="d"><span class="up">−${fgap(-r.ne.gaps.silver)}</span><br><span class="muted">cut ${ft(r.std.silver)}</span></div>`}
+  if(k==='bb'){title='BB or better';note='Short course events at BB or faster, and the next level.';rows=bb;line=r=>`<div class="d"><span class="pill lv-${r.level}">${r.level}</span><br><span class="muted">${r.next?r.next.name+' in '+fgap(r.next.gap):'Top'}</span></div>`}
+  if(k==='next'){title='Closest new USA levels';note='Either course, closest to the next level.';rows=M.rows.filter(r=>r.next).sort((a,b)=>a.next.gap-b.next.gap).slice(0,8);line=r=>`<div class="d"><b>${fgap(r.next.gap)}</b><br><span class="muted">to ${r.next.name} ${ft(r.next.cut)}</span></div>`}
+  if(k==='ag'){title='Age Group cuts and bonus times';note='Bonus times add events once she has one qualifying cut.';rows=ne.slice().sort((a,b)=>a.ne.gaps.ag-b.ne.gaps.ag);line=r=>`<div class="d">${r.ne.tier==='Age Group'?'<span class="pill ok">Qualified</span>':`<b>${fgap(r.ne.gaps.ag)}</b> off`}<br>${r.ne.bonus?'<span class="up">Bonus ✓</span>':`<span class="muted">bonus ${fgap(r.ne.gaps.ag_bonus)} off</span>`}</div>`}
+  return `<div class="card detail" style="--c:${c}"><div class="detail-head"><h2>${title}</h2><button class="small muted" data-tile="${k}">Close ✕</button></div><p class="note">${note}</p><div class="list">`+
+    (rows.length?rows.map(r=>`<button class="li" data-event="${esc(r.event)}" data-course="${r.course}"><div class="main"><div class="ev">${esc(r.event)}${r.course==='LCM'?' <span class="pill">LCM</span>':''}</div><div class="sm">${fdate(r.date)}</div></div><div class="t">${r.time}</div>${line(r)}</button>`).join(''):'<div class="empty">None yet.</div>')+'</div></div>';
+}
+function meetCard(m,latest){
+  const pbs=m.swims.filter(s=>s.pb&&!s.first);
+  const dates=m.start===m.end?fdate(m.start):fdate(m.start,false)+'–'+(m.start.slice(5,7)===m.end.slice(5,7)?+m.end.slice(8):fdate(m.end,false))+', '+m.end.slice(0,4);
+  return `<div class="card"><h2>${latest?'Latest meet: ':''}${esc(m.name)}</h2><p class="note">${dates} · ${m.swims.length} swims · ${pbs.length?`<b style="color:var(--good)">${pbs.length} best time${pbs.length>1?'s':''}</b>`:'no new bests'}</p><div class="list">`+
+    m.swims.slice().sort((a,b)=>ORDER.indexOf(a.event)-ORDER.indexOf(b.event)).map(s=>{
+      const d=s.prevBest==null?null:r2(s.seconds-s.prevBest);
+      const r=M.rows.find(x=>x.event===s.event&&x.course===s.course);
+      return `<button class="li" data-event="${esc(s.event)}" data-course="${s.course}"><div class="main"><div class="ev">${esc(s.event)}${s.course!=='SCY'?' <span class="pill">'+s.course+'</span>':''} ${s.pb&&!s.first?'<span class="pill pb">PB</span>':''}</div><div class="sm">${fdate(s.date,false)}${r&&r.level?' · best is '+r.level:''}</div></div><div class="t">${ft(s.seconds)}</div><div class="d" style="min-width:58px">${d==null?'<span class="muted">first</span>':d<0?`<span class="up">−${fgap(-d)}</span>`:`<span class="down">+${fgap(d)}</span>`}</div></button>`}).join('')+'</div></div>';
+}
+
+/* Times */
+function keep(r){
+  if(r.course!==S.course)return false;
+  if(S.stroke!=='all'&&r.stroke!==S.stroke)return false;
+  if(S.show==='sprint'&&r.dist>100)return false;
+  if(S.show==='close'){const g=[r.next&&r.next.gap,r.ne&&r.ne.next&&r.ne.next.gap].filter(x=>x!=null);if(!g.length||Math.min(...g)>2)return false}
+  if(S.show==='old'&&!r.old)return false;
+  return true;
+}
+function filters(withShow=true){
+  return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px"><div class="seg">${['SCY','LCM'].map(c=>`<button data-course-f="${c}" aria-pressed="${S.course===c}">${c==='SCY'?'Short course':'Long course'}</button>`).join('')}</div></div>
+  <div class="chips">${['all',...STROKES].map(s=>`<button class="chip" data-stroke="${s}" aria-pressed="${S.stroke===s}">${s==='all'?'All strokes':s}</button>`).join('')}</div>`+
+  (withShow?`<div class="chips">${[['all','All events'],['sprint','50s & 100s'],['close','Within 2s of a cut'],['old','Times to update']].map(([v,l])=>`<button class="chip" data-show="${v}" aria-pressed="${S.show===v}">${l}</button>`).join('')}</div>`:'');
+}
+function vTimes(){
+  const rows=M.rows.filter(keep);
+  let h=filters();
+  if(!rows.length)return h+'<div class="card empty">No events match these filters.</div>';
+  const scyv=S.course==='SCY';
+  h+=`<div class="card"><h2>Where each event sits</h2><p class="note">${scyv?'Distance from the Age Group cut as a share of her time. Further left is faster. Tap an event for details.':'Distance from the USA Swimming AA level as a share of her time. Further left is faster.'}</p><div class="legend" id="ladLegend"></div><div id="ladder"></div></div>`;
+  h+=`<div style="display:flex;justify-content:space-between;align-items:center;margin:4px 2px 10px"><h2 style="margin:0;font-size:22px">Best times</h2><div class="seg">${[['cards','Cards'],['table','Table']].map(([v,l])=>`<button data-view="${v}" aria-pressed="${S.view===v}">${l}</button>`).join('')}</div></div>`;
+  if(S.view==='table')return h+bestTable(rows)+`<p class="small muted" style="padding:0 4px">${esc(M.settings.usaLabel||'')}. ${esc(M.settings.neLabel||'')}.</p>`;
+  h+=rows.map(r=>{
+    let cuts='';
+    if(r.ne){const g=r.ne.gaps,s=r.std;const c=(n,cut,gap)=>`<span class="cut ${gap<=0?'made':''}">${n} ${ft(cut)} ${gap<=0?'✓':`· <b>${fgap(gap)}</b>`}</span>`;
+      cuts=`<div class="cuts">${c('Bronze',s.bronze,g.bronze)}${c('Silver',s.silver,g.silver)}${g.ag_bonus!=null?c('AG bonus',s.ag_bonus,g.ag_bonus):''}${c('AG',s.ag,g.ag)}</div>`}
+    return `<button class="ecard" data-event="${esc(r.event)}" data-course="${r.course}"><div class="top"><div><div class="name">${esc(r.event)}</div><div class="lvrow">${r.level?`<span class="pill lv-${r.level.replace(' ','')}">${r.level}</span>`:''}${r.next?`<span>${r.next.name} ${ft(r.next.cut)} · <b style="color:var(--ink)">${fgap(r.next.gap)}</b> to go</span>`:r.level?'<span>Top level</span>':'<span>No national standard</span>'}</div></div><div style="text-align:right"><div class="best">${r.time}</div><div class="when">${fdate(r.date)} ${r.old?'<span class="old">old</span>':''}</div></div></div>${cuts}</button>`}).join('');
+  return h+`<p class="small muted" style="padding:0 4px">${esc(M.settings.usaLabel||'')}. ${esc(M.settings.neLabel||'')}.</p>`;
+}
+
+/* Progress */
+function vProgress(){
+  const evs=ORDER.filter(e=>M.swims.filter(s=>s.event===e&&s.course===S.pcourse).length>=2);
+  if(!evs.includes(S.pevent))S.pevent=evs.includes('50 Fly')?'50 Fly':evs[0];
+  let h=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px"><h2>Progress</h2><div class="seg">${['SCY','LCM'].map(c=>`<button data-pcourse="${c}" aria-pressed="${S.pcourse===c}">${c}</button>`).join('')}</div></div>
+  <div class="chips">${evs.map(e=>`<button class="chip" data-pevent="${esc(e)}" aria-pressed="${S.pevent===e}">${esc(e)}</button>`).join('')}</div>
+  <div id="pchart"></div></div>`;
+  const rows=M.rows.filter(r=>r.course===S.pcourse&&r.swimCount>=2);
+  h+=`<div class="card"><h2>Pace and projections</h2><p class="note">Time dropped in the last 12 months and when she'd reach the next cut at that pace. Drops usually slow as swimmers get faster, so these are best-case.</p><div class="scroll"><table class="tbl bt"><thead><tr><th>Event</th><th>Best</th><th>Dropped</th><th>Pace</th><th>Next cut</th><th>On pace by</th>${S.pcourse==='SCY'?'<th>Age Group by</th>':''}</tr></thead><tbody>`+
+    rows.map(r=>{const tgt=r.ne&&r.ne.next?r.ne.next:r.next;return `<tr data-event="${esc(r.event)}" data-course="${r.course}"><td><b>${esc(r.event)}</b></td><td>${r.time}</td><td>${r.drop>0?fgap(r.drop)+'s':'—'}</td><td>${r.rate?r.rate.toFixed(2)+' s/mo':'—'}</td><td>${tgt?tgt.name+' '+ft(tgt.cut):'—'}</td><td>${tgt?(eta(tgt.gap,r.rate)||'—'):'—'}</td>${S.pcourse==='SCY'?`<td>${r.ne?(r.ne.tier==='Age Group'?'Done':eta(r.ne.gaps.ag,r.rate)||'—'):'—'}</td>`:''}</tr>`}).join('')+`</tbody></table></div></div>`;
+  return h;
+}
+
+/* Meets */
+function vMeets(){
+  if(!S.meetSel)S.meetSel=M.meets[0]&&M.meets[0].key;
+  const m=M.meets.find(x=>x.key===S.meetSel)||M.meets[0];
+  let h=`<div class="card"><h2>Meets</h2><p class="note">${M.meets.length} meets. Tap one to see its swims.</p><div class="chips" style="flex-wrap:nowrap">${M.meets.map(x=>`<button class="chip" data-meet="${esc(x.key)}" aria-pressed="${x.key===m.key}">${esc(x.name.replace(/^NE (CS |CRIM |CRA |RIAC )?/,''))} · ${fdate(x.start,false)} '${x.start.slice(2,4)}${x.pbs?' ⭐':''}</button>`).join('')}</div></div>`;
+  if(m)h+=meetCard(m,false);
+  return h;
+}
+
+/* Add */
+function vAdd(){
+  const f=S.form;const recent=[...new Set(M.meets.map(m=>m.name))].slice(0,8);
+  const evs=EVENTS[f.course];if(!evs.includes(f.event))f.event=evs[0];
+  return `<div class="card"><h2>Add a time</h2><p class="note">${S.pin?'Unlocked on this phone.':'You\'ll need the family PIN the first time.'}</p>
+  <div class="field"><label for="fMeet">Meet</label><input class="inp" id="fMeet" list="meetList" placeholder="e.g. Andover meet" value="${esc(f.meet)}" autocomplete="off"><datalist id="meetList">${recent.map(n=>`<option value="${esc(n)}">`).join('')}</datalist></div>
+  <div class="row2"><div class="field"><label for="fDate">Date</label><input class="inp" type="date" id="fDate" value="${f.date}" max="${todayKey()}"></div>
+  <div class="field"><label>Course</label><div class="seg" style="display:flex">${['SCY','LCM'].map(c=>`<button style="flex:1" data-fcourse="${c}" aria-pressed="${f.course===c}">${c}</button>`).join('')}</div></div></div>
+  <div class="field"><label for="fEvent">Event</label><select class="inp" id="fEvent">${STROKES.map(st=>`<optgroup label="${st}">${evs.filter(e=>e.endsWith(st)).map(e=>`<option ${e===f.event?'selected':''}>${e}</option>`).join('')}</optgroup>`).join('')}</select></div>
+  <div class="field"><label for="fTime">Time</label><input class="inp timein" id="fTime" inputmode="decimal" placeholder="1:02.68" value="${esc(f.time)}" autocomplete="off"></div>
+  <div id="preview"></div>
+  <button class="btn" id="addSwim" disabled>Add time</button></div>
+  <div id="meetLog">${meetLog()}</div>`;
+}
+function meetLog(){
+  const f=S.form;const todays=M.swims.filter(s=>s.meet===f.meet.trim()&&Math.abs(dnum(s.date)-dnum(f.date||todayKey()))<=4).slice().reverse();
+  return todays.length?`<div class="card"><h2>${esc(f.meet)}</h2><p class="note">Swims logged at this meet.</p><div class="list">${todays.map(s=>`<div class="li"><div class="main"><div class="ev">${esc(s.event)} ${s.pb&&!s.first?'<span class="pill pb">PB</span>':''}</div><div class="sm">${fdate(s.date,false)} · ${s.course}</div></div><div class="t">${ft(s.seconds)}</div><button class="del" data-del="${esc(s.id)}">Delete</button></div>`).join('')}</div></div>`:'';
+}
+function updatePreview(){
+  const f=S.form;const el=$('#preview'),btn=$('#addSwim');if(!el)return;
+  const sec=parseTime(f.time);
+  btn.disabled=!(sec&&f.meet.trim()&&f.date);
+  if(!f.time){el.innerHTML='';return}
+  if(!sec){el.innerHTML='<div class="preview">Type a time like 28.85, 1:02.68 or 1.02.68.</div>';return}
+  const r=M.rows.find(x=>x.event===f.event&&x.course===f.course);
+  const std=M.std[f.course+'|'+f.event];
+  const fake=evalBest({event:f.event,course:f.course,seconds:sec,date:f.date,meet:f.meet},std,M.swims.concat([{event:f.event,course:f.course,seconds:sec,date:f.date}]));
+  let head,cls='preview';
+  if(!r){head=`<div class="h">${ft(sec)} · first ${f.course} ${esc(f.event)} on record</div>`}
+  else if(sec<r.sec){cls+=' pb';head=`<div class="h">🎉 New best! ${ft(sec)}, −${fgap(r2(r.sec-sec))} from ${r.time}</div>`}
+  else head=`<div class="h">${ft(sec)} · +${fgap(r2(sec-r.sec))} vs best ${r.time}</div>`;
+  const bits=[];
+  if(fake.level)bits.push(`Level <b>${fake.level}</b>${fake.next?`, ${fake.next.name} in ${fgap(fake.next.gap)}`:''}`);
+  if(fake.ne){bits.push(fake.ne.tier==='None'?`Bronze in ${fgap(fake.ne.gaps.bronze)}`:fake.ne.tier==='Age Group'?'<b>Age Group cut!</b>':`<b>${fake.ne.tier}</b> cut ✓${fake.ne.next?`, ${fake.ne.next.name} in ${fgap(fake.ne.next.gap)}`:''}`);
+    if(fake.ne.bonus)bits.push('AG bonus ✓')}
+  const newCut=r&&sec<r.sec&&((fake.level!==r.level)||(fake.ne&&r.ne&&fake.ne.tier!==r.ne.tier)||(fake.ne&&r.ne&&fake.ne.bonus&&!r.ne.bonus));
+  el.innerHTML=`<div class="${cls}">${head}<div class="small" style="margin-top:4px">${bits.join(' · ')}</div>${newCut?'<div class="small" style="margin-top:4px;font-weight:700">That\'s a new level or cut!</div>':''}</div>`;
+}
+
+/* Event sheet */
+function openEvent(ev,course){
+  const r=M.rows.find(x=>x.event===ev&&x.course===course);
+  const list=M.swims.filter(s=>s.event===ev&&s.course===course).slice().reverse();
+  const tgt=r&&(r.ne&&r.ne.next?r.ne.next:r.next);
+  let h=`<div class="grab"></div><div class="mh"><h2>${esc(ev)} <span class="pill">${course}</span></h2><button class="iconbtn" style="background:#E7EFF4" data-close>✕</button></div>`;
+  if(r)h+=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-end"><div><div class="small muted">Best</div><div class="big" style="font-size:44px;font-weight:700;line-height:1">${r.time}</div><div class="small muted">${fdate(r.date)} · ${esc(r.meet)}</div></div><div style="text-align:right">${r.level?`<span class="pill lv-${r.level.replace(' ','')}">${r.level}</span>`:''}${r.next?`<div class="small" style="margin-top:6px">${r.next.name} in <b>${fgap(r.next.gap)}</b></div>`:''}</div></div>
+  ${r.ne?`<div class="cuts" style="margin-top:10px">${[['Bronze','bronze'],['Silver','silver'],['AG bonus','ag_bonus'],['AG','ag']].filter(([,k])=>r.std[k]!=null).map(([n,k])=>`<span class="cut ${r.ne.gaps[k]<=0?'made':''}">${n} ${ft(r.std[k])} ${r.ne.gaps[k]<=0?'✓':'· <b>'+fgap(r.ne.gaps[k])+'</b>'}</span>`).join('')}</div>`:''}
+  ${tgt&&r.rate?`<p class="pace">Dropped <b>${fgap(r.drop)}s</b> in the last 12 months. At that pace: <b>${tgt.name}</b> around <b>${eta(tgt.gap,r.rate)}</b>.</p>`:''}</div>`;
+  h+=`<div class="card"><div id="echart"></div></div><div class="card"><h2>Every swim</h2><div class="list">`+list.map(s=>{const d=s.prevBest==null?null:r2(s.seconds-s.prevBest);return `<div class="li"><div class="main"><div class="ev">${fdate(s.date)} ${s.pb&&!s.first?'<span class="pill pb">PB</span>':''}</div><div class="sm">${esc(s.meet)}</div></div><div class="t">${ft(s.seconds)}</div>${S.pin?`<button class="del" data-del="${esc(s.id)}">✕</button>`:''}</div>`}).join('')+'</div></div>';
+  openModal(h);
+  drawProgress($('#echart'),ev,course,false);
+}
+function openModal(html){const m=$('#modal');m.querySelector('.sheet').innerHTML=html;m.classList.add('on');document.body.style.overflow='hidden'}
+function closeModal(){$('#modal').classList.remove('on');document.body.style.overflow=''}
+
+/* Chart */
+function drawProgress(box,ev,course,withPace){
+  if(!box)return;
+  const rows=M.swims.filter(s=>s.event===ev&&s.course===course).map(s=>({...s,t:dnum(s.date)}));
+  if(rows.length<1){box.innerHTML='<div class="empty">No swims yet.</div>';return}
+  const r=M.rows.find(x=>x.event===ev&&x.course===course);const std=M.std[course+'|'+ev];
+  let best=Infinity;const steps=[];rows.forEach(p=>{if(p.seconds<best){best=p.seconds;steps.push({t:p.t,v:best})}});
+  const lastT=rows[rows.length-1].t;steps.push({t:lastT,v:best});
+  let cuts=[];
+  if(std&&course==='SCY'&&std.ag!=null)cuts=[['Bronze',std.bronze,COL.bronze],['Silver',std.silver,COL.silver],['AG bonus',std.ag_bonus,COL.bonus],['Age Group',std.ag,COL.ag]].filter(c=>c[1]!=null);
+  else if(std&&std.B!=null){const i=LV.findIndex(l=>best>std[l]);cuts=(i<0?[]:LV.slice(Math.max(0,i-1),i+2)).map((l,j)=>[l,std[l],[COL.bronze,COL.silver,COL.ag][j]])}
+  const maxV=Math.max(...rows.map(p=>p.seconds));
+  cuts=cuts.filter(c=>c[1]<maxV*1.03&&c[1]>best*0.9);
+  const tgt=cuts.filter(c=>c[1]<best).sort((a,b)=>b[1]-a[1])[0];
+  let proj=null;
+  if(r&&r.rate>0&&tgt){const mo=Math.min((best-tgt[1])/r.rate,15);proj={t0:lastT,v0:best,t1:lastT+mo*30.44,v1:best-mo*r.rate}}
+  const W=Math.max(300,box.clientWidth||340),H=230,top=12,bottom=24;
+  const vs=[...rows.map(p=>p.seconds),...cuts.map(c=>c[1]),proj?proj.v1:Infinity].filter(isFinite);
+  const lo=Math.min(...vs),hi=Math.max(...vs),padv=(hi-lo)*.08||0.5;
+  const y=v=>top+(v-(lo-padv))/((hi+padv)-(lo-padv))*(H-top-bottom);
+  // label widths
+  const cw=cuts.length?Math.max(...cuts.map(c=>(c[0]+' '+ft(c[1])).length))*6.2+8:0;
+  const left=38,right=Math.min(cw,W*.38)+4;
+  const t0=rows[0].t,t1=Math.max(proj?proj.t1:lastT,t0+30);
+  const x=t=>left+(t-t0)/(t1-t0)*(W-left-right);
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Barlow, system-ui, sans-serif" font-size="11">`;
+  // y ticks
+  const nT=4;for(let i=0;i<=nT;i++){const v=lo-padv+((hi+padv)-(lo-padv))*i/nT;s+=`<line x1="${left}" x2="${W-right}" y1="${y(v)}" y2="${y(v)}" stroke="${COL.grid}"/><text x="${left-6}" y="${y(v)+3.5}" text-anchor="end" fill="#5B7083">${ft(v).replace(/\.\d+$/,m=>m.slice(0,2))}</text>`}
+  // x ticks: months
+  // month-start ticks, spaced so labels never touch (~56px each)
+  const d0=new Date(t0*864e5),d1=new Date(t1*864e5);
+  const mi=d0.getUTCFullYear()*12+d0.getUTCMonth()+1,me=d1.getUTCFullYear()*12+d1.getUTCMonth();
+  const room=W-left-right,months=Math.max(1,me-mi+1);
+  const stepM=[1,2,3,4,6,12,24].find(k=>Math.ceil(months/k)*(k>=12?38:50)<=room)||24;
+  for(let m=mi;m<=me;m++){
+    if((m%12)%stepM!==0&&!(stepM>12&&m%12===0))continue;
+    if(stepM>12&&(m%12!==0||Math.floor(m/12)%(stepM/12)!==0))continue;
+    const t=Date.UTC(Math.floor(m/12),m%12,1)/864e5,X=x(t);
+    if(X<left+(stepM>=12?12:20)||X>W-right-(stepM>=12?10:18))continue;
+    const lab=stepM>=12?String(Math.floor(m/12)):MONTHS[m%12]+" '"+String(Math.floor(m/12)).slice(2);
+    s+=`<line x1="${X}" x2="${X}" y1="${H-bottom}" y2="${H-bottom+4}" stroke="#B9C9D4"/><text x="${X}" y="${H-6}" text-anchor="middle" fill="#5B7083">${lab}</text>`}
+  // cuts
+  let lastY=-99;cuts.slice().sort((a,b)=>y(a[1])-y(b[1])).forEach(c=>{s+=`<line x1="${left}" x2="${W-right}" y1="${y(c[1])}" y2="${y(c[1])}" stroke="${c[2]}" stroke-width="1.5" stroke-dasharray="5 4"/>`;const ly=Math.max(y(c[1]),lastY+12);lastY=ly;s+=`<text x="${W-right+5}" y="${ly+3.5}" fill="${c[2]}" font-weight="600">${esc(c[0])} ${ft(c[1])}</text>`});
+  // area + step line
+  let d='',a='';steps.forEach((p,i)=>{const X=x(p.t),Y=y(p.v);if(i===0){d+=`M${X},${Y}`;a+=`M${X},${H-bottom}L${X},${Y}`}else{d+=`H${X}V${Y}`;a+=`H${X}V${Y}`}});
+  a+=`V${H-bottom}Z`;
+  s+=`<defs><linearGradient id="g${box.id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${COL.her}" stop-opacity=".22"/><stop offset="1" stop-color="${COL.her}" stop-opacity="0"/></linearGradient></defs>`;
+  s+=`<path d="${a}" fill="url(#g${box.id})"/><path d="${d}" fill="none" stroke="${COL.her}" stroke-width="2.2" stroke-linejoin="round"/>`;
+  if(proj)s+=`<line x1="${x(proj.t0)}" y1="${y(proj.v0)}" x2="${x(proj.t1)}" y2="${y(proj.v1)}" stroke="${COL.her}" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>`;
+  rows.forEach((p,i)=>{s+=`<circle cx="${x(p.t)}" cy="${y(p.seconds)}" r="${p.pb?4.5:3.5}" fill="${p.pb?COL.her:'#fff'}" stroke="${COL.her}" stroke-width="1.6"/><circle data-i="${i}" cx="${x(p.t)}" cy="${y(p.seconds)}" r="12" fill="transparent"/>`});
+  s+='</svg>';
+  const leg=`<div class="legend"><span><i class="dot" style="background:${COL.her}"></i>Best time</span><span><i class="dot" style="border:1.6px solid ${COL.her}"></i>Other swim</span>${proj?`<span><i style="background:repeating-linear-gradient(90deg,${COL.her} 0 3px,transparent 3px 7px)"></i>At current pace</span>`:''}</div>`;
+  box.innerHTML=leg+`<div class="chart">${s}<div class="tip"></div></div>`+(withPace&&r?`<p class="pace">${r.rate?`Dropped <b>${fgap(r.drop)}s</b> in the ${esc(ev)} over the last 12 months.`+(tgt?` At that pace, <b>${esc(tgt[0])} ${ft(tgt[1])}</b> around <b>${eta(best-tgt[1],r.rate)}</b>.`:''):'Not enough change in the last 12 months to estimate a pace.'} <button class="small" style="color:var(--sea);font-weight:600" data-event="${esc(ev)}" data-course="${course}">Every swim →</button></p>`:'');
+  const tip=box.querySelector('.tip'),svg=box.querySelector('svg');
+  svg.addEventListener('pointermove',e=>{const c=e.target.closest('circle[data-i]');if(!c){tip.style.display='none';return}const p=rows[+c.dataset.i];
+    tip.innerHTML=`${fdate(p.date)}<br><b>${ft(p.seconds)}</b> · ${esc(p.meet)}`;tip.style.display='block';
+    const br=box.querySelector('.chart').getBoundingClientRect(),cr=c.getBoundingClientRect();
+    let L=cr.left-br.left+12;if(L+tip.offsetWidth>br.width)L=cr.left-br.left-tip.offsetWidth-4;tip.style.left=Math.max(0,L)+'px';tip.style.top=Math.max(0,cr.top-br.top-tip.offsetHeight-4)+'px'});
+  svg.addEventListener('pointerleave',()=>tip.style.display='none');
+}
+
+/* Best-times table */
+function bestTable(rows){
+  const scy=S.course==='SCY';
+  const cut=(r,k)=>{if(!r.ne||r.std[k]==null)return '—';const g=r.ne.gaps[k];return g<=0?`<span class="cut made">${ft(r.std[k])} ✓</span>`:`${ft(r.std[k])} <span class="muted">· ${fgap(g)}</span>`};
+  return `<div class="card" style="padding:6px 0"><div class="scroll" style="margin:0;padding:0"><table class="tbl bt"><thead><tr><th>Event</th><th>Best</th><th>Level</th><th>Next level</th>${scy?'<th>Bronze</th><th>Silver</th><th>AG bonus</th><th>Age Group</th>':''}<th>Date</th></tr></thead><tbody>`+
+    rows.map(r=>`<tr data-event="${esc(r.event)}" data-course="${r.course}"><td><b>${esc(r.event)}</b></td><td>${r.time}</td><td>${r.level?`<span class="pill lv-${r.level.replace(' ','')}">${r.level}</span>`:'—'}</td><td>${r.next?`${r.next.name} ${ft(r.next.cut)} <span class="muted">· ${fgap(r.next.gap)}</span>`:'—'}</td>${scy?['bronze','silver','ag_bonus','ag'].map(k=>`<td>${cut(r,k)}</td>`).join(''):''}<td>${fdate(r.date)}${r.old?' <span class="old">old</span>':''}</td></tr>`).join('')+
+    `</tbody></table></div></div>`;
+}
+
+/* Cut chart */
+function drawLadder(box,rows){
+  if(!box)return;
+  const scy=S.course==='SCY',refK=scy?'ag':'AA';
+  const ticks=scy?[['Bronze','bronze',COL.bronze],['Silver','silver',COL.silver],['AG bonus','ag_bonus',COL.bonus]]:[['B','B',COL.bronze],['BB','BB',COL.silver],['A','A',COL.bonus]];
+  const leg=$('#ladLegend');
+  if(leg)leg.innerHTML=`<span><i class="dot" style="background:${COL.her}"></i>Her best</span><span><i style="background:${COL.ag}"></i>${scy?'Age Group cut':'AA'}</span>`+ticks.map(t=>`<span><i style="background:${t[2]};width:3px;height:12px"></i>${t[0]}</span>`).join('');
+  rows=rows.filter(r=>r.std&&r.std[refK]!=null);
+  if(!rows.length){box.innerHTML='<div class="empty">No cuts for these events.</div>';return}
+  const pct=(r,v)=>v/r.std[refK]-1;
+  const W=Math.max(300,box.clientWidth||340),rowH=34,top=22,H=top+rows.length*rowH+4;
+  const left=Math.max(...rows.map(r=>r.event.length))*7.2+10,right=12;
+  const vals=rows.flatMap(r=>[pct(r,r.sec),...ticks.filter(t=>r.std[t[1]]!=null).map(t=>pct(r,r.std[t[1]]))]);
+  const lo=Math.min(0,...vals)-0.015,hi=Math.max(...vals)*1.06+0.01;
+  const x=v=>left+(v-lo)/(hi-lo)*(W-left-right);
+  const step=[0.05,0.1,0.2,0.25,0.5].find(st=>x(st)-x(0)>=44)||0.5;
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Barlow, system-ui, sans-serif" font-size="12">`;
+  for(let v=0;v<=hi;v=r2(v+step)){s+=`<line x1="${x(v)}" x2="${x(v)}" y1="${top-6}" y2="${H}" stroke="${v===0?COL.ag:COL.grid}" stroke-width="${v===0?1.5:1}" ${v===0?'stroke-dasharray="4 3"':''}/><text x="${x(v)}" y="${top-10}" text-anchor="middle" fill="${v===0?COL.ag:'#5B7083'}" font-size="11" ${v===0?'font-weight="600"':''}>${v===0?(scy?'AG cut':'AA'):'+'+Math.round(v*100)+'%'}</text>`}
+  rows.forEach((r,i)=>{
+    const y=top+i*rowH+rowH/2;const far=Math.max(...ticks.filter(t=>r.std[t[1]]!=null).map(t=>pct(r,r.std[t[1]])),pct(r,r.sec));
+    s+=`<g class="lad-row" data-event="${esc(r.event)}" data-course="${r.course}" data-i="${i}"><rect x="0" y="${y-rowH/2}" width="${W}" height="${rowH}" fill="transparent"/>`;
+    s+=`<text x="0" y="${y+4}" fill="#0E2233" font-weight="600">${esc(r.event)}</text>`;
+    s+=`<rect x="${x(0)}" y="${y-4}" width="${Math.max(0,x(far)-x(0))}" height="8" rx="4" fill="${COL.her}" opacity=".10"/>`;
+    ticks.forEach(t=>{if(r.std[t[1]]==null)return;const X=x(pct(r,r.std[t[1]]));s+=`<line x1="${X}" x2="${X}" y1="${y-9}" y2="${y+9}" stroke="${t[2]}" stroke-width="3" stroke-linecap="round"/>`});
+    const made=scy?(r.ne&&(r.ne.tier==='Silver'||r.ne.tier==='Age Group')):(r.std.BB!=null&&r.sec<=r.std.BB);
+    if(made)s+=`<circle cx="${x(pct(r,r.sec))}" cy="${y}" r="10" fill="${COL.her}" opacity=".18"/>`;
+    s+=`<circle cx="${x(pct(r,r.sec))}" cy="${y}" r="6.5" fill="${COL.her}" stroke="#fff" stroke-width="2"/></g>`;
+  });
+  s+='</svg>';
+  box.innerHTML=`<div class="chart">${s}<div class="tip"></div></div>`;
+  const tip=box.querySelector('.tip'),svg=box.querySelector('svg'),ch=box.querySelector('.chart');
+  svg.addEventListener('pointermove',e=>{const g=e.target.closest('g[data-i]');if(!g){tip.style.display='none';return}const r=rows[+g.dataset.i];
+    const lines=scy&&r.ne?[['Bronze','bronze'],['Silver','silver'],['AG bonus','ag_bonus'],['Age Group','ag']].filter(([,k])=>r.std[k]!=null).map(([n,k])=>`${n} ${ft(r.std[k])} ${r.ne.gaps[k]<=0?'✓':'· '+fgap(r.ne.gaps[k])+' off'}`):[r.next?`${r.next.name} ${ft(r.next.cut)} · ${fgap(r.next.gap)} off`:'Top level'];
+    tip.innerHTML=`<b>${esc(r.event)} ${r.time}</b> ${r.level?'· '+r.level:''}<br>`+lines.join('<br>');tip.style.display='block';
+    const br=ch.getBoundingClientRect();let L=e.clientX-br.left+12;if(L+tip.offsetWidth>br.width)L=e.clientX-br.left-tip.offsetWidth-12;tip.style.left=Math.max(0,L)+'px';
+    const gy=g.getBoundingClientRect().bottom-br.top+2;tip.style.top=Math.min(gy,br.height-tip.offsetHeight)+'px'});
+  svg.addEventListener('pointerleave',()=>tip.style.display='none');
+}
+
+/* PIN */
+function askPin(){
+  return new Promise(res=>{
+    let v='';
+    const draw=(msg)=>{openModal(`<div class="grab"></div><div class="mh"><h2>Family PIN</h2><button class="iconbtn" style="background:#E7EFF4" data-close>✕</button></div><p class="muted" style="text-align:center;margin:0">${msg||'Enter the 4-digit PIN to add or change times.'}</p><div class="dots">${[0,1,2,3].map(i=>`<i class="${i<v.length?'on':''}"></i>`).join('')}</div><div class="pinpad">${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k=>k===''?'<span></span>':`<button data-k="${k}">${k}</button>`).join('')}</div>`);
+      $('#modal .pinpad').addEventListener('click',async e=>{const b=e.target.closest('[data-k]');if(!b)return;const k=b.dataset.k;
+        if(k==='⌫')v=v.slice(0,-1);else if(v.length<4)v+=k;draw();
+        if(v.length===4){try{await call('checkPin',v);S.pin=v;ls.set('swim-pin',v);closeModal();toast('Unlocked on this phone');render();res(v)}catch(err){v='';draw(errMsg(err)==='Wrong PIN'?'Wrong PIN. Try again.':errMsg(err))}}})};
+    draw();
+    S._pinRes=()=>res(null);
+  });
+}
+async function withPin(fn){
+  if(!S.pin){const p=await askPin();if(!p)return}
+  try{return await fn(S.pin)}catch(e){if(errMsg(e)==='Wrong PIN'){S.pin='';ls.set('swim-pin',null);toast('PIN changed. Enter it again.');render()}else toast(errMsg(e))}
+}
+
+/* ---------- actions ---------- */
+async function addSwim(){
+  const f=S.form;const sec=parseTime(f.time);if(!sec)return;
+  const btn=$('#addSwim');btn.disabled=true;btn.textContent='Saving…';
+  const prev=M.rows.find(x=>x.event===f.event&&x.course===f.course);
+  const res=await withPin(pin=>call('addSwims',pin,[{date:f.date,meet:f.meet.trim(),course:f.course,event:f.event,seconds:sec}],'app'));
+  if(btn){btn.textContent='Add time'}
+  if(!res){updatePreview();return}
+  S.data.swims.push(...res);ls.set('swim-data',JSON.stringify(S.data));ls.set('swim-lastmeet',f.meet.trim());
+  M=build(S.data);
+  toast(prev&&sec<prev.sec?`🎉 New best in the ${f.event}!`:`Added ${f.event} ${ft(sec)}`);
+  f.time='';render();
+}
+async function delSwim(id){
+  const s=M.swims.find(x=>x.id===id);if(!s)return;
+  if(!confirm(`Delete ${s.event} ${ft(s.seconds)} from ${fdate(s.date)}?`))return;
+  const ok=await withPin(pin=>call('deleteSwim',pin,id));
+  if(!ok)return;
+  S.data.swims=S.data.swims.filter(x=>x.id!==id);ls.set('swim-data',JSON.stringify(S.data));M=build(S.data);closeModal();toast('Deleted');render();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  const t=e.target;
+  if(t.closest('#modal .bg')||t.closest('[data-close]')){closeModal();S._pinRes&&S._pinRes();S._pinRes=null;return}
+  const tab=t.closest('nav.tabs [data-tab]');if(tab){S.tab=tab.dataset.tab;ls.set('swim-tab',S.tab);render();window.scrollTo(0,0);return}
+  const del=t.closest('[data-del]');if(del){delSwim(del.dataset.del);return}
+  const tile=t.closest('[data-tile]');if(tile){S.tile=S.tile===tile.dataset.tile?null:tile.dataset.tile;render();return}
+  const evb=t.closest('[data-event]');if(evb){if($('#modal').classList.contains('on'))closeModal();openEvent(evb.dataset.event,evb.dataset.course);return}
+  const vw=t.closest('[data-view]');if(vw){S.view=vw.dataset.view;ls.set('swim-view',S.view);render();return}
+  const cf=t.closest('[data-course-f]');if(cf){S.course=cf.dataset.courseF;render();return}
+  const sk=t.closest('[data-stroke]');if(sk){S.stroke=sk.dataset.stroke;render();return}
+  const sh=t.closest('[data-show]');if(sh){S.show=sh.dataset.show;render();return}
+  const pc=t.closest('[data-pcourse]');if(pc){S.pcourse=pc.dataset.pcourse;render();return}
+  const pe=t.closest('[data-pevent]');if(pe){S.pevent=pe.dataset.pevent;ls.set('swim-pevent',S.pevent);render();return}
+  const mt=t.closest('[data-meet]');if(mt){S.meetSel=mt.dataset.meet;render();return}
+  const fc=t.closest('[data-fcourse]');if(fc){S.form.course=fc.dataset.fcourse;render();return}
+  if(t.closest('#addSwim')){addSwim();return}
+});
+document.addEventListener('input',e=>{
+  const f=S.form,id=e.target.id;
+  if(id==='fTime'){f.time=e.target.value;updatePreview()}
+  if(id==='fMeet'){f.meet=e.target.value;updatePreview()}
+  if(id==='fDate'){f.date=e.target.value;updatePreview()}
+});
+document.addEventListener('change',e=>{if(e.target.id==='fEvent'){S.form.event=e.target.value;updatePreview()}if((e.target.id==='fMeet'||e.target.id==='fDate')&&$('#meetLog'))$('#meetLog').innerHTML=meetLog()});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='fTime'&&!$('#addSwim').disabled)addSwim()});
+$('#refreshBtn').addEventListener('click',()=>load(true));
+$('#lockBtn').addEventListener('click',()=>{
+  if(S.pin){if(confirm('Lock this phone? You\'ll need the PIN to add times again.')){S.pin='';ls.set('swim-pin',null);render();toast('Locked')}}
+  else askPin();
+});
+window.addEventListener('resize',()=>{clearTimeout(window._rz);window._rz=setTimeout(after,150)});
+
+/* ---------- load ---------- */
+async function load(manual){
+  const btn=$('#refreshBtn');btn.classList.add('spin');
+  try{const d=await call('data');S.data=d;S.offline=false;ls.set('swim-data',JSON.stringify(d));M=build(d);if(manual)toast('Up to date')}
+  catch(e){S.offline=true;S.err=errMsg(e);if(manual)toast(S.err)}
+  finally{btn.classList.remove('spin');render()}
+}
+(function boot(){
+  const c=ls.get('swim-data');if(c){try{S.data=JSON.parse(c);M=build(S.data)}catch(e){}}
+  render();load();
+})();
+</script>
+</body>
+</html>

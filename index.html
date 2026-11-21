@@ -129,8 +129,10 @@ button.li{width:100%;text-align:left}
 .tbl td{padding:9px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
 .tbl tr:last-child td{border-bottom:0}
 .scroll{overflow-x:auto;margin:0 -16px;padding:0 16px}
+.tbl.bt{border-collapse:separate;border-spacing:0}
 .bt td,.bt th{padding-left:10px;padding-right:10px}
-.bt td:first-child,.bt th:first-child{position:sticky;left:0;background:#fff;z-index:1;padding-left:16px;box-shadow:1px 0 0 var(--line)}
+.bt td:first-child,.bt th:first-child{position:sticky;left:0;background:#fff;z-index:2;padding-left:16px;box-shadow:1px 0 0 var(--line),8px 0 10px -6px rgba(14,34,51,.18);clip-path:inset(0 -20px 0 0)}
+.bt td:last-child,.bt th:last-child{padding-right:16px}
 .bt tbody tr,.tbl tr[data-event]{cursor:pointer}
 .bt .cut{margin:0}
 .lad-row{cursor:pointer}
@@ -416,7 +418,7 @@ function vProgress(){
   <div class="chips">${evs.map(e=>`<button class="chip" data-pevent="${esc(e)}" aria-pressed="${S.pevent===e}">${esc(e)}</button>`).join('')}</div>
   <div id="pchart"></div></div>`;
   const rows=M.rows.filter(r=>r.course===S.pcourse&&r.swimCount>=2);
-  h+=`<div class="card"><h2>Pace and projections</h2><p class="note">Time dropped in the last 12 months and when she'd reach the next cut at that pace. Drops usually slow as swimmers get faster, so these are best-case.</p><div class="scroll"><table class="tbl bt"><thead><tr><th>Event</th><th>Best</th><th>Dropped</th><th>Pace</th><th>Next cut</th><th>On pace by</th>${S.pcourse==='SCY'?'<th>Age Group by</th>':''}</tr></thead><tbody>`+
+  h+=`<div class="card"><h2>Pace and projections</h2><p class="note">Time dropped in the last 12 months and when she'd reach the next cut at that pace. Drops usually slow as swimmers get faster, so these are best-case.</p><div class="scroll" style="margin:0 -16px;padding:0"><table class="tbl bt"><thead><tr><th>Event</th><th>Best</th><th>Dropped</th><th>Pace</th><th>Next cut</th><th>On pace by</th>${S.pcourse==='SCY'?'<th>Age Group by</th>':''}</tr></thead><tbody>`+
     rows.map(r=>{const tgt=r.ne&&r.ne.next?r.ne.next:r.next;return `<tr data-event="${esc(r.event)}" data-course="${r.course}"><td><b>${esc(r.event)}</b></td><td>${r.time}</td><td>${r.drop>0?fgap(r.drop)+'s':'—'}</td><td>${r.rate?r.rate.toFixed(2)+' s/mo':'—'}</td><td>${tgt?tgt.name+' '+ft(tgt.cut):'—'}</td><td>${tgt?(eta(tgt.gap,r.rate)||'—'):'—'}</td>${S.pcourse==='SCY'?`<td>${r.ne?(r.ne.tier==='Age Group'?'Done':eta(r.ne.gaps.ag,r.rate)||'—'):'—'}</td>`:''}</tr>`}).join('')+`</tbody></table></div></div>`;
   return h;
 }
